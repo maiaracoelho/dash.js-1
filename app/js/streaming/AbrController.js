@@ -150,7 +150,7 @@ MediaPlayer.dependencies.AbrController = function () {
                              self.abrRulesCollection.getRules().then(
                                function (rules) {
                                 for (i = 0, len = rules.length; i < len; i += 1) {
-                                    //self.debug.log("Regras: "+len);
+                                    self.debug.log("Regras: "+len);
                                     funcs.push(rules[i].checkIndex(quality, metrics, data, metricsBaseline, availableRepresentations));
                                 }
                                 Q.all(funcs).then(
@@ -193,12 +193,12 @@ MediaPlayer.dependencies.AbrController = function () {
                                         }
                                         
                                         /** Armazenamento do delay para ser utilizado no BufferController  - Baseline TR5 Maiara **/
-                                        //newDelay = req.delay;
-                                       // self.debug.log("newDelay: "+newDelay);
+                                        newDelay = req.delay;
+                                        self.debug.log("newDelay: "+newDelay);
 
-                                        //if (newDelay !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE && newDelay !== undefined) {
-                                        //    delay = newDelay;
-                                        //}
+                                        if (newDelay !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE && newDelay !== undefined) {
+                                            delay = newDelay;
+                                        }
                                         /****/
                                         
                                         self.manifestExt.getRepresentationCount(data).then(
