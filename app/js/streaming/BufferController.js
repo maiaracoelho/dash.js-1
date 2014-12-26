@@ -1211,16 +1211,14 @@ MediaPlayer.dependencies.BufferController = function () {
             self.indexHandler.setIsDynamic(isDynamic);
             /** Aplicando o Delay se ele for diferente de zero - Baseline TR5 Maiara**/
             //if (newDelay == 0){
-            	self.bufferExt.decideBufferLength(manifestMinBufferTime, periodInfo.duration, waitingForBuffer).then(
+            self.bufferExt.decideBufferLength(manifest.minBufferTime, periodInfo, waitingForBuffer).then(
                         function (time) {
                             //self.debug.log("Min Buffer time: " + time);
                             self.setMinBufferTime(time);
-                            self.requestScheduler.adjustExecuteInterval();
                         }
                     );
            // }else{
             //	self.setMinBufferTime(newDelay);
-               // self.requestScheduler.adjustExecuteInterval();
            // }
             /****/
         },
