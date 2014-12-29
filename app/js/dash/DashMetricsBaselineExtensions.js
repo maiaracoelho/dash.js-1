@@ -50,7 +50,7 @@ Dash.dependencies.DashMetricsBaselineExtensions = function () {
 	 		}
 	 		begin++;
 	 	} 
-    	//this.debug.log("bufferMinArrayTemp: "+ bufferMinArrayTemp.length);
+    	this.debug.log("bufferMinArrayTemp: "+ bufferMinArrayTemp.length);
 
 	 	return this.min(bufferMinArrayTemp);
     },
@@ -102,37 +102,7 @@ Dash.dependencies.DashMetricsBaselineExtensions = function () {
     	return (somaThroughInters/somaInters);
         
     },
-    
-    getAverageThrough3Segs = function (metricsBaseline) {
-        if (metricsBaseline == null) {
-            return [];
-        }
         
-        var throughList = metrics.ThroughSeg,
-        	throughListLength,
-        	throughListLastIndex,
-        	sumThrough = 0,
-        	averageThrough = 0,
-        	elem = 0;
-    
-        if (throughList === null || throughList.length <= 0) {
-        	return null;
-        }
-
-        throughListLength = throughList.length;
-        throughListIndex = throughListLength - 1;
-
-        while (httpListIndex > throughListLength - 3) {
-        		sumThrough += throughList[throughListIndex].throughSeg;   //  bit/ms
-        		httpListLastIndex -= 1;
-        		elem += 1;
-        }
-		
-		averageThrough = through/elem;
-		
-        return averageThrough;
-    }, 
-    
     getThroughSegs = function (metricsBaseline) {
         if (metricsBaseline == null) {
             return [];
@@ -145,8 +115,7 @@ Dash.dependencies.DashMetricsBaselineExtensions = function () {
     	debug : undefined,
     	min : min,
     	getBufferMinTime : getBufferMinTime,
-    	getAverageThrough : getAverageThrough,
-    	getAverageThrough3Segs : getAverageThrough3Segs
+    	getAverageThrough : getAverageThrough
     };
 };
 

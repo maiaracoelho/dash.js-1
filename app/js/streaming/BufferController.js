@@ -1086,7 +1086,7 @@ MediaPlayer.dependencies.BufferController = function () {
                         }
                         
                         /** Aplicando o Delay se ele for diferente de zero - Baseline TR5 Maiara**/
-                        newDelay = delay;
+                        	self.setDelay(delay);
                         /****/
                         
                         qualityChanged = (quality !== requiredQuality);
@@ -1210,6 +1210,7 @@ MediaPlayer.dependencies.BufferController = function () {
 
             self.indexHandler.setIsDynamic(isDynamic);
             /** Aplicando o Delay se ele for diferente de zero - Baseline TR5 Maiara**/
+            
             if (newDelay == 0){
             self.bufferExt.decideBufferLength(manifest.minBufferTime, periodInfo, waitingForBuffer).then(
                         function (time) {
@@ -1359,6 +1360,15 @@ MediaPlayer.dependencies.BufferController = function () {
 
         setMinBufferTime: function (value) {
             minBufferTime = value;
+        },
+        
+        getDelay: function () {
+            return newDelay;
+        },
+
+        
+        setDelay: function (value) {
+            newDelay = value;
         },
 
         setMediaSource: function(value) {

@@ -20,7 +20,7 @@ MediaPlayer.rules.MillerRule = function () {
         			bandwidth /= 1000; //bit/ms
         			
         			downloadTime = throughList[i].finishTime.getTime() - throughList[i].responseTime.getTime();
-        			segDuration = throughList[i].duration/1000; 
+        			segDuration = throughList[i].duration * 1000; 
         			
         			through = (bandwidth * segDuration)/downloadTime; 
         			
@@ -135,7 +135,7 @@ MediaPlayer.rules.MillerRule = function () {
             	currentBandwidth = self.manifestExt.getBandwidth1(representation1);
             	currentBandwidthMs = currentBandwidth/1000;
             	
-            	currentThrough = (lastRequest.mediaduration/downloadTime) * currentBandwidth; 	//verificar valores
+            	currentThrough = (currentBandwidth * lastRequest.mediaduration)/downloadTime ; 	//verificar valores
             	
             	insertThroughputs.call(self, metricsBaseline.ThroughSeg, availableRepresentations);
             	
@@ -175,12 +175,12 @@ MediaPlayer.rules.MillerRule = function () {
             		self.debug.log("Baseline -  throughSeg: " + metricsBaseline.ThroughSeg[j].throughSeg);
             	}
 				*/
+            	
             	bufferMinTime1 = self.metricsBaselineExt.getBufferMinTime(time1, deltaBuffer, metrics, startRequest);
-            	bufferMinTime2 = self.metricsBaselineExt.getBufferMinTime(time2, deltaBuffer, metrics, startRequest);
-        		averageThrough = self.metricsBaselineExt.getAverageThrough(t1, time, metricsBaseline, startRequest);	
-        		
             	self.debug.log("Baseline - bufferMinTime1: " + bufferMinTime1);
+            	bufferMinTime2 = self.metricsBaselineExt.getBufferMinTime(time2, deltaBuffer, metrics, startRequest);
             	self.debug.log("Baseline - bufferMinTime2: " + bufferMinTime2);
+        		averageThrough = self.metricsBaselineExt.getAverageThrough(t1, time, metricsBaseline, startRequest);	
         		self.debug.log("Baseline - averageThrough: " + averageThrough);
         		
         		 if (isNaN(averageThrough) || isNaN(bufferMinTime1) || isNaN(bufferMinTime2)) {
@@ -219,7 +219,7 @@ MediaPlayer.rules.MillerRule = function () {
                           	}
                           	if(currentBufferLevel.level > bHigh){
                                  self.debug.log("Apply delay 1");
-                                 bDelay = bHigh - lastRequest.mediaduration;
+                                 bDelay = bHigh - (lastRequest.mediaduration*1000);
                           	}
                           }
                           deferred.resolve(new MediaPlayer.rules.SwitchRequest(current, p, bDelay));
@@ -238,12 +238,12 @@ MediaPlayer.rules.MillerRule = function () {
                            }else if(currentBufferLevel.level < bHigh){
                         		 if(current == max || oneUpBandwidth >= ALPHA_5 * averageThrough){
                                         self.debug.log("Apply delay 2");
-                                        bDelay = Math.max(currentBuffer.level - lastRequest.mediaduration, bOpt);
+                                        bDelay = Math.max(currentBuffer.level - (lastRequest.mediaduration*1000), bOpt);
                         		 }
                            }else{
                         		 if(current == max || oneUpBandwidth >= ALPHA_5 * averageThrough){
                                        self.debug.log("Apply delay 3");
-                                       bDelay = Math.max(currentBuffer.level - lastRequest.mediaduration, bOpt);
+                                       bDelay = Math.max(currentBuffer.level - (lastRequest.mediaduration*1000), bOpt);
                         		 }else{
                                      	self.debug.log("Up One");
              								current += 1;

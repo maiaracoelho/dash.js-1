@@ -17,6 +17,7 @@ MediaPlayer.dependencies.AbrController = function () {
     var autoSwitchBitrate = true,
         qualityDict = {},
         confidenceDict = {},
+        delayDict = {},
 
         getInternalQuality = function (type) {
             var quality;
@@ -48,6 +49,22 @@ MediaPlayer.dependencies.AbrController = function () {
 
         setInternalConfidence = function (type, value) {
             confidenceDict[type] = value;
+        },
+        
+        getInternalDelay = function (type) {
+            var delay;
+
+            if (!delayDict.hasOwnProperty(type)) {
+            	delayDict[type] = 0;
+            }
+
+            delay = delayDict[type];
+
+            return delay;
+        },
+        
+        setInternalDelay = function (type, value) {
+            delayDict[type] = value;
         };
 
     return {
@@ -135,8 +152,8 @@ MediaPlayer.dependencies.AbrController = function () {
                 delay;
 
             quality = getInternalQuality(type);
-
             confidence = getInternalConfidence(type);
+            delay = getInternalDelay(type);
 
             //self.debug.log("ABR enabled? (" + autoSwitchBitrate + ")");
 
@@ -172,16 +189,19 @@ MediaPlayer.dependencies.AbrController = function () {
                                         if (values[MediaPlayer.rules.SwitchRequest.prototype.WEAK] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
                                             newConfidence = MediaPlayer.rules.SwitchRequest.prototype.WEAK;
                                             newQuality = values[MediaPlayer.rules.SwitchRequest.prototype.WEAK];
+                                            newDelay = values[MediaPlayer.rules.SwitchRequest.prototype.WEAK];
                                         }
 
                                         if (values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
                                             newConfidence = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
                                             newQuality = values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT];
+                                            newDelay = values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT];
                                         }
 
                                         if (values[MediaPlayer.rules.SwitchRequest.prototype.STRONG] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
                                             newConfidence = MediaPlayer.rules.SwitchRequest.prototype.STRONG;
                                             newQuality = values[MediaPlayer.rules.SwitchRequest.prototype.STRONG];
+                                            newDelay = values[MediaPlayer.rules.SwitchRequest.prototype.STRONG];
                                         }
 
                                         if (newQuality !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE && newQuality !== undefined) {
@@ -193,9 +213,6 @@ MediaPlayer.dependencies.AbrController = function () {
                                         }
                                         
                                         /** Armazenamento do delay para ser utilizado no BufferController  - Baseline TR5 Maiara **/
-                                        newDelay = req.delay;
-                                        self.debug.log("newDelay: "+newDelay);
-
                                         if (newDelay !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE && newDelay !== undefined) {
                                             delay = newDelay;
                                         }
@@ -218,11 +235,11 @@ MediaPlayer.dependencies.AbrController = function () {
                                                 }
 
                                                 setInternalQuality(type, quality);
-                                                self.debug.log("New quality of " + quality + " Type: "+type + " Confidence: "+confidence );
-
                                                 setInternalConfidence(type, confidence);
-
-                                                deferred.resolve({quality: quality, confidence: confidence});
+                                                setInternalDelay(type, delay);
+                                                
+                                                self.debug.log("New quality of " + quality + " Type: "+type + " Confidence: "+confidence + " Delay: "+delay );
+                                                deferred.resolve({quality: quality, confidence: confidence, delay: delay });
                                             }
                                         );
                                     }
@@ -235,7 +252,7 @@ MediaPlayer.dependencies.AbrController = function () {
                 );
             } else {
                 self.debug.log("Unchanged quality of " + quality);
-                deferred.resolve({quality: quality, confidence: confidence});
+                deferred.resolve({quality: quality, confidence: confidence, delay: delay });
             }
 
             return deferred.promise;
