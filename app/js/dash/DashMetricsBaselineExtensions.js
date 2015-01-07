@@ -55,6 +55,56 @@ Dash.dependencies.DashMetricsBaselineExtensions = function () {
 	 	return this.min(bufferMinArrayTemp);
     },
     
+    /*
+    getBufferMinTeenTime = function (numSegs, metricsBaseline) {
+        if (metricsBaseline == null) {
+            return [];
+        }
+        
+        var bufferLevelList = metricsBaseline.BufferLevel,
+        	bufferLevelListLength,
+        	bufferLevelListIndex,
+        	bufferLevelListTemp,
+        	bufferMinArrayTemp = [],
+        	startTime, 
+   	 		finishTime, 
+   	 		startTimeTemp, 
+   	 		finishTimeTemp, 
+   	 		begin = 0, 
+   	 		end = bufferList.length, 
+   	 		bufferTime;
+    
+        if (bufferLevelList == null || bufferLevelList.length <= 0) {
+            return [];
+        }
+
+        bufferLevelListLength = bufferLevelList.length;
+        bufferLevelListIndex = bufferLevelListLength - 1;
+
+        while (bufferLevelListIndex >= bufferLevelListLength - numSegs) {
+        	bufferLevelListTemp.push(bufferLevelList[bufferLevelListIndex].bufferLevel);
+        	bufferLevelListIndex -= 1;
+        }
+        
+        startTimeTemp = (timeTarget/deltaBuffer) * deltaBuffer;
+   	 	finishTimeTemp = startTimeTemp + deltaBuffer;
+   	 	startTime = Math.floor(startTimeTemp);
+   	 	finishTime = Math.floor(finishTimeTemp);
+		
+   	 	while(begin < end){
+
+	 		bufferTime = bufferList[begin].t.getTime() - startRequestTime;
+	 		if (bufferTime >= startTime && bufferTime <= finishTime){
+	 			bufferMinArrayTemp.push(bufferList[begin].level);
+	 		}
+	 		begin++;
+	 	} 
+   	 	this.debug.log("bufferMinArrayTemp: "+ bufferMinArrayTemp.length);
+
+	 	return this.min(bufferMinArrayTemp);
+    }, 
+    */
+    
     getAverageThrough = function (time1, time, metricsBaseline, startSessionTime) {
     	var throughList = metricsBaseline.ThroughSeg,
     	begin = 0, 
@@ -109,13 +159,44 @@ Dash.dependencies.DashMetricsBaselineExtensions = function () {
         }
 
         return !metricsBaseline.ThroughSeg ? metricsBaseline.ThroughSeg : [];
+    },
+    
+    getDelays = function (metricsBaseline) {
+        if (metricsBaseline == null) {
+            return [];
+        }
+
+        return !metricsBaseline.Delay ? metricsBaseline.Delay : [];
+    },
+    
+    getLastDelay = function (metricsBaseline) { //informacoes da ultima transação http respondida, ou seja de n(t)
+
+        if (metricsBaseline === null) {
+            return null;
+        }
+
+        var delayList = metricsBaseline.Delay,
+        	delayListLength,
+        	delayListLastIndex,
+            currentDelayList = null;
+        
+        if (delayList === null || delayList.length <= 0) {
+            return null;
+        }
+
+        delayListLength = delayList.length -1;
+        currentDelayList = delayList[delayListLastIndex];
+        
+        return currentDelayList;
     };
 
     return {
     	debug : undefined,
     	min : min,
     	getBufferMinTime : getBufferMinTime,
-    	getAverageThrough : getAverageThrough
+    	getAverageThrough : getAverageThrough,
+    	getDelays : getDelays,
+    	getLastDelay : getLastDelay
     };
 };
 

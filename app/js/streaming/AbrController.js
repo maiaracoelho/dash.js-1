@@ -15,58 +15,41 @@ MediaPlayer.dependencies.AbrController = function () {
     "use strict";
 
     var autoSwitchBitrate = true,
-        qualityDict = {},
-        confidenceDict = {},
-        delayDict = {},
+    qualityDict = {},
+    confidenceDict = {},
 
-        getInternalQuality = function (type) {
-            var quality;
+    getInternalQuality = function (type) {
+        var quality;
 
-            if (!qualityDict.hasOwnProperty(type)) {
-                qualityDict[type] = 0;
-            }
+        if (!qualityDict.hasOwnProperty(type)) {
+            qualityDict[type] = 0;
+        }
 
-            quality = qualityDict[type];
+        quality = qualityDict[type];
 
-            return quality;
-        },
+        return quality;
+    },
 
-        setInternalQuality = function (type, value) {
-            qualityDict[type] = value;
-        },
+    setInternalQuality = function (type, value) {
+        qualityDict[type] = value;
+    },
 
-        getInternalConfidence = function (type) {
-            var confidence;
+    getInternalConfidence = function (type) {
+        var confidence;
 
-            if (!confidenceDict.hasOwnProperty(type)) {
-                confidenceDict[type] = 0;
-            }
+        if (!confidenceDict.hasOwnProperty(type)) {
+            confidenceDict[type] = 0;
+        }
 
-            confidence = confidenceDict[type];
+        confidence = confidenceDict[type];
 
-            return confidence;
-        },
+        return confidence;
+    },
 
-        setInternalConfidence = function (type, value) {
-            confidenceDict[type] = value;
-        },
+    setInternalConfidence = function (type, value) {
+        confidenceDict[type] = value;
+    };
         
-        getInternalDelay = function (type) {
-            var delay;
-
-            if (!delayDict.hasOwnProperty(type)) {
-            	delayDict[type] = 0;
-            }
-
-            delay = delayDict[type];
-
-            return delay;
-        },
-        
-        setInternalDelay = function (type, value) {
-            delayDict[type] = value;
-        };
-
     return {
         debug: undefined,
         abrRulesCollection: undefined,
@@ -137,23 +120,22 @@ MediaPlayer.dependencies.AbrController = function () {
         },
         
         getPlaybackQuality: function (type, data, availableRepresentations) {
-            var self = this,
-                deferred = Q.defer(),
-                newQuality = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE,
-                newConfidence = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE,
-                newDelay = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE,
-                i,
-                len,
-                funcs = [],
-                req,
-                values,
-                quality,
-                confidence, 
-                delay;
+        	 var self = this,
+             deferred = Q.defer(),
+             newQuality = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE,
+             newConfidence = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE,
+             i,
+             len,
+             funcs = [],
+             req,
+             values,
+             quality,
+             confidence;
 
-            quality = getInternalQuality(type);
-            confidence = getInternalConfidence(type);
-            delay = getInternalDelay(type);
+         quality = getInternalQuality(type);
+
+         confidence = getInternalConfidence(type);
+
 
             //self.debug.log("ABR enabled? (" + autoSwitchBitrate + ")");
 
@@ -168,79 +150,70 @@ MediaPlayer.dependencies.AbrController = function () {
                                function (rules) {
                                 for (i = 0, len = rules.length; i < len; i += 1) {
                                     self.debug.log("Regras: "+len);
-                                    funcs.push(rules[i].checkIndex(quality, metrics, data, metricsBaseline, availableRepresentations));
+                                    funcs.push(rules[i].checkIndex(quality, metrics, data, metricsBaseline, availableRepresentations, type));
                                 }
                                 Q.all(funcs).then(
-                                    function (results) {
-                                        //self.debug.log("Resultados: "+results);
-                                        values = {};
-                                        values[MediaPlayer.rules.SwitchRequest.prototype.STRONG] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
-                                        values[MediaPlayer.rules.SwitchRequest.prototype.WEAK] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
-                                        values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
+                                        function (results) {
+                                            //self.debug.log(results);
+                                            values = {};
+                                            values[MediaPlayer.rules.SwitchRequest.prototype.STRONG] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
+                                            values[MediaPlayer.rules.SwitchRequest.prototype.WEAK] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
+                                            values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT] = MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE;
 
-                                        for (i = 0, len = results.length; i < len; i += 1) {
-                                            req = results[i];
-                                            if (req.quality !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-                                                values[req.priority] = Math.min(values[req.priority], req.quality);
+                                            for (i = 0, len = results.length; i < len; i += 1) {
+                                                req = results[i];
+                                                if (req.quality !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
+                                                    values[req.priority] = Math.min(values[req.priority], req.quality);
+                                                }
                                             }
 
-                                        }
+                                            if (values[MediaPlayer.rules.SwitchRequest.prototype.WEAK] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
+                                                newConfidence = MediaPlayer.rules.SwitchRequest.prototype.WEAK;
+                                                newQuality = values[MediaPlayer.rules.SwitchRequest.prototype.WEAK];
+                                            }
 
-                                        if (values[MediaPlayer.rules.SwitchRequest.prototype.WEAK] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-                                            newConfidence = MediaPlayer.rules.SwitchRequest.prototype.WEAK;
-                                            newQuality = values[MediaPlayer.rules.SwitchRequest.prototype.WEAK];
-                                            newDelay = values[MediaPlayer.rules.SwitchRequest.prototype.WEAK];
-                                        }
+                                            if (values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
+                                                newConfidence = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
+                                                newQuality = values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT];
+                                            }
 
-                                        if (values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-                                            newConfidence = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
-                                            newQuality = values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT];
-                                            newDelay = values[MediaPlayer.rules.SwitchRequest.prototype.DEFAULT];
-                                        }
+                                            if (values[MediaPlayer.rules.SwitchRequest.prototype.STRONG] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
+                                                newConfidence = MediaPlayer.rules.SwitchRequest.prototype.STRONG;
+                                                newQuality = values[MediaPlayer.rules.SwitchRequest.prototype.STRONG];
+                                            }
 
-                                        if (values[MediaPlayer.rules.SwitchRequest.prototype.STRONG] !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE) {
-                                            newConfidence = MediaPlayer.rules.SwitchRequest.prototype.STRONG;
-                                            newQuality = values[MediaPlayer.rules.SwitchRequest.prototype.STRONG];
-                                            newDelay = values[MediaPlayer.rules.SwitchRequest.prototype.STRONG];
-                                        }
+                                            if (newQuality !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE && newQuality !== undefined) {
+                                                quality = newQuality;
+                                            }
 
-                                        if (newQuality !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE && newQuality !== undefined) {
-                                            quality = newQuality;
-                                        }
-
-                                        if (newConfidence !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE && newConfidence !== undefined) {
-                                            confidence = newConfidence;
-                                        }
-                                        
-                                        /** Armazenamento do delay para ser utilizado no BufferController  - Baseline TR5 Maiara **/
-                                        if (newDelay !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE && newDelay !== undefined) {
-                                            delay = newDelay;
-                                        }
-                                        /****/
+                                            if (newConfidence !== MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE && newConfidence !== undefined) {
+                                                confidence = newConfidence;
+                                            }
                                         
                                         self.manifestExt.getRepresentationCount(data).then(
-                                            function (max) {
-                                                // be sure the quality valid!
-                                                if (quality < 0) {
-                                                    quality = 0;
-                                                }
-                                                // zero based
-                                                if (quality >= max) {
-                                                    quality = max - 1;
-                                                }
+                                                function (max) {
+                                                    // be sure the quality valid!
+                                                    if (quality < 0) {
+                                                        quality = 0;
+                                                    }
+                                                    // zero based
+                                                    if (quality >= max) {
+                                                        quality = max - 1;
+                                                    }
 
-                                                if (confidence != MediaPlayer.rules.SwitchRequest.prototype.STRONG &&
-                                                    confidence != MediaPlayer.rules.SwitchRequest.prototype.WEAK) {
-                                                    confidence = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
-                                                }
+                                                    if (confidence != MediaPlayer.rules.SwitchRequest.prototype.STRONG &&
+                                                        confidence != MediaPlayer.rules.SwitchRequest.prototype.WEAK) {
+                                                        confidence = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT;
+                                                    }
 
-                                                setInternalQuality(type, quality);
-                                                setInternalConfidence(type, confidence);
-                                                setInternalDelay(type, delay);
-                                                
-                                                self.debug.log("New quality of " + quality + " Type: "+type + " Confidence: "+confidence + " Delay: "+delay );
-                                                deferred.resolve({quality: quality, confidence: confidence, delay: delay });
-                                            }
+                                                    setInternalQuality(type, quality);
+                                                    //self.debug.log("New quality of " + quality);
+
+                                                    setInternalConfidence(type, confidence);
+                                                    //self.debug.log("New confidence of " + confidence);
+
+                                                    deferred.resolve({quality: quality, confidence: confidence});
+                                           }
                                         );
                                     }
                                 );
@@ -252,7 +225,7 @@ MediaPlayer.dependencies.AbrController = function () {
                 );
             } else {
                 self.debug.log("Unchanged quality of " + quality);
-                deferred.resolve({quality: quality, confidence: confidence, delay: delay });
+                deferred.resolve({quality: quality, confidence: confidence});
             }
 
             return deferred.promise;

@@ -11,24 +11,18 @@
  * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-MediaPlayer.rules.SwitchRequest = function (q, p, d) {
+MediaPlayer.rules.SwitchRequest = function (q, p) {
     "use strict";
     this.quality = q;
     this.priority = p;
-    this.delay = d;
 
     if (this.quality === undefined) {
         this.quality = 999;
     }
 
     if (this.priority === undefined) {
-        this.priority = 0.5;
+        this.priority = 1;
     }
-    
-    if (this.delay === undefined) {
-        this.delay = 0;
-    }
-    
 };
 
 MediaPlayer.rules.SwitchRequest.prototype = {

@@ -63,8 +63,6 @@ MediaPlayer.dependencies.BufferController = function () {
         data = null,
         buffer = null,
         minBufferTime,
-    	newDelay = 0,
-
         
         playListMetrics = null,
         playListTraceMetrics = null,
@@ -1027,7 +1025,6 @@ MediaPlayer.dependencies.BufferController = function () {
             //self.debug.log(type + " Playback rate: " + self.videoModel.getElement().playbackRate);
             //self.debug.log(type + " Working time: " + currentTime);
             //self.debug.log(type + " Video time: " + currentVideoTime);
-            //self.debug.log("Current " + type + " buffer length: " + bufferLevel);
             if(type=="video"){
             	self.debug.log("time: "+currentVideoTime+" " + type + " bufferVideo: " + bufferLevel);
             }
@@ -1052,23 +1049,15 @@ MediaPlayer.dependencies.BufferController = function () {
             }
 
             if (state === READY) {
-                setState.call(self, VALIDATING);
-                var manifestMinBufferTime = self.manifestModel.getValue().minBufferTime;   //Recuperando o MPD e decidindo qual tempo minimo utilizar...
-                
-                /** Aplicando o Delay se ele for diferente de zero - Baseline TR5 Maiara**/
-                if (newDelay == 0){
-                	self.bufferExt.decideBufferLength(manifestMinBufferTime, periodInfo.duration, waitingForBuffer).then(
-                            function (time) {
-                                //self.debug.log("Min Buffer time: " + time);
-                                self.setMinBufferTime(time);
-                                self.requestScheduler.adjustExecuteInterval();
-                            }
-                        );
-                }else{
-                	self.setMinBufferTime(newDelay);
-                    self.requestScheduler.adjustExecuteInterval();
-                }
-                /****/
+            	setState.call(self, VALIDATING);
+                var manifestMinBufferTime = self.manifestModel.getValue().minBufferTime;
+                self.bufferExt.decideBufferLength(manifestMinBufferTime, periodInfo.duration, waitingForBuffer).then(
+                    function (time) {
+                        //self.debug.log("Min Buffer time: " + time);
+                        self.setMinBufferTime(time);
+                        self.requestScheduler.adjustExecuteInterval();
+                    }
+                );
                 
                
                 self.abrController.getPlaybackQuality(type, data, availableRepresentations).then(
@@ -1076,17 +1065,16 @@ MediaPlayer.dependencies.BufferController = function () {
                         //self.debug.log("Resultado");
 
                         var quality = result.quality;
-                        var delay = result.delay;
                         
-                        //self.debug.log(type + " Playback quality: " + quality);
-                        //self.debug.log("Populate " + type + " buffers.");
+                        self.debug.log(type + " Playback quality: " + quality);
+                        self.debug.log("Populate " + type + " buffers.");
 
                         if (quality !== undefined) {
                             newQuality = quality;
                         }
                         
                         /** Aplicando o Delay se ele for diferente de zero - Baseline TR5 Maiara**/
-                        	self.setDelay(delay);
+                        	//self.setDelay(delay);
                         /****/
                         
                         qualityChanged = (quality !== requiredQuality);
@@ -1211,16 +1199,16 @@ MediaPlayer.dependencies.BufferController = function () {
             self.indexHandler.setIsDynamic(isDynamic);
             /** Aplicando o Delay se ele for diferente de zero - Baseline TR5 Maiara**/
             
-            if (newDelay == 0){
+            //if (newDelay == 0){
             self.bufferExt.decideBufferLength(manifest.minBufferTime, periodInfo, waitingForBuffer).then(
                         function (time) {
                             //self.debug.log("Min Buffer time: " + time);
                             self.setMinBufferTime(time);
                         }
                     );
-            }else{
-            	self.setMinBufferTime(newDelay);
-            }
+           // }else{
+            //	self.setMinBufferTime(newDelay);
+           // }
             /****/
         },
 
@@ -1362,14 +1350,14 @@ MediaPlayer.dependencies.BufferController = function () {
             minBufferTime = value;
         },
         
-        getDelay: function () {
-            return newDelay;
-        },
+       // getDelay: function () {
+       //     return newDelay;
+       // },
 
-        
-        setDelay: function (value) {
-            newDelay = value;
-        },
+       
+       // setDelay: function (value) {
+        //     newDelay = value;
+        //},
 
         setMediaSource: function(value) {
             mediaSource = value;

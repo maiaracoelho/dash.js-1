@@ -681,6 +681,7 @@ MediaPlayer.dependencies.Stream = function () {
                     }
                 }
             );
+            
         },
 
         currentTimeChanged = function () {

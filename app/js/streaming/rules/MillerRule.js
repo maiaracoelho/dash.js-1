@@ -24,8 +24,8 @@ MediaPlayer.rules.MillerRule = function () {
         			
         			through = (bandwidth * segDuration)/downloadTime; 
         			
-        			self.debug.log("bandwidth: " + bandwidth);
-        			self.debug.log("through: " + through);
+        			//self.debug.log("bandwidth: " + bandwidth);
+        			//self.debug.log("through: " + through);
         			
             		self.metricsBaselinesModel.updateThroughputSeg(throughList[i], bandwidth, through);
 
@@ -48,16 +48,16 @@ MediaPlayer.rules.MillerRule = function () {
              * @memberof MillerRule#
              */
             
-            checkIndex: function (current, metrics, data, metricsBaseline, availableRepresentations) {
+            checkIndex: function (current, metrics, data, metricsBaseline, availableRepresentations, type) {
 
                 var self = this,
                 httpRequestList = self.metricsExt.getHttpRequests(metrics),
                 lastRequest = self.metricsExt.getLastHttpRequest(metrics),
                 firstRequest = self.metricsExt.getFirstHttpRequest(metrics), 											//First Request n(0)
                 currentBufferLevel  = self.metricsExt.getCurrentBufferLevel(metrics),		//b(t)
-                bMin=8000,
-                bLow=16000,
-                bHigh=40000,																//self.metricsExt.getMaxIndexForBufferType(lastRequest.stream)
+                bMin=8,
+                bLow=12,
+                bHigh=50,																//self.metricsExt.getMaxIndexForBufferType(lastRequest.stream)
                 bOpt=0.5*(bLow+bHigh),
                 downloadTime,															
                 currentThrough,																	//p_n(t)
@@ -75,14 +75,12 @@ MediaPlayer.rules.MillerRule = function () {
                 representation3,
                 currentBandwidth,
                 oneUpBandwidth,
-                oneDownBandwidth, 
                 max,
                 startRequest,
-                bufferMinTime1,
-                bufferMinTime2,
-                averageThrough,
+                bufferMinTime1 = 0,
+                bufferMinTime2 = 0,
+                averageThrough = 0,
                 currentBandwidthMs = 0,
-                p = MediaPlayer.rules.SwitchRequest.prototype.DEFAULT,
                 bDelay = 0;
                 
             	self.debug.log("Baseline - Regra TR5 MillerRule...");
@@ -139,53 +137,32 @@ MediaPlayer.rules.MillerRule = function () {
             	
             	insertThroughputs.call(self, metricsBaseline.ThroughSeg, availableRepresentations);
             	
-        		/*self.debug.log("Baseline - lastRequest stream: " +lastRequest.stream);
-        		if(lastRequest.responsecode)
-            		self.debug.log("Baseline -  lastRequest responsecode: " + lastRequest.responsecode);
-        		self.debug.log("Baseline -   lastRequest request: " + (lastRequest.trequest.getTime() - startRequest));
-        		self.debug.log("Baseline -  lastRequest response: " + (lastRequest.tresponse.getTime()- startRequest));
-            	self.debug.log("Baseline -  lastRequest finish: " + (lastRequest.tfinish.getTime()- startRequest));
-        		self.debug.log("Baseline -  lastRequest url: " + lastRequest.url);
-        		self.debug.log("Baseline -  lastRequest range: " + lastRequest.range);
-        		self.debug.log("Baseline -  lastRequest type: " + lastRequest.type);
-        		self.debug.log("Baseline -  lastRequest duration: " + lastRequest.mediaduration);
-        		
-            	for(var i = 0; i < httpRequestList.length; i++){
-            			self.debug.log("Baseline - HttpList Number: " + i);
-                		self.debug.log("Baseline - stream: " +httpRequestList[i].stream);
-                		if(httpRequestList[i].responsecode)
-                    		self.debug.log("Baseline -  responsecode: " + httpRequestList[i].responsecode);
-                		self.debug.log("Baseline -   request: " + (httpRequestList[i].trequest.getTime() - startRequest));
-                		self.debug.log("Baseline -  response: " + (httpRequestList[i].tresponse.getTime()- startRequest));
-                    	self.debug.log("Baseline -  finish: " + (httpRequestList[i].tfinish.getTime()- startRequest));
-                		self.debug.log("Baseline -  url: " + httpRequestList[i].url);
-                		self.debug.log("Baseline -  range: " + httpRequestList[i].range);
-                		self.debug.log("Baseline -  type: " + httpRequestList[i].type);
-                		self.debug.log("Baseline -  duration: " + httpRequestList[i].mediaduration);
+        		self.debug.log("Baseline - time: " + time);
+        		self.debug.log("Baseline - t1: " + t1);
+        		self.debug.log("Baseline - time1: " + time1);
+        		self.debug.log("Baseline - time2: " + time2);
+
+            	/*for(var j = 0; j < metrics.BufferLevel.length; j++){
+            		self.debug.log("Baseline - BufferLevel Number: " + j);
+            		self.debug.log("Baseline -  t: " + (metrics.BufferLevel[j].t.getTime() - startRequest));
+            		self.debug.log("Baseline -  level: " + metrics.BufferLevel[j].level);
+            	}*/
+				
+            	if(runningFastStart){
+            		bufferMinTime1 = self.metricsBaselineExt.getBufferMinTime(time1, deltaBuffer, metrics, startRequest);
+                	self.debug.log("Baseline - bufferMinTime1: " + bufferMinTime1);
+                	bufferMinTime2 = self.metricsBaselineExt.getBufferMinTime(time2, deltaBuffer, metrics, startRequest);
+                	self.debug.log("Baseline - bufferMinTime2: " + bufferMinTime2);
             	}
-          		
-            	for(var j = 0; j < metricsBaseline.ThroughSeg.length; j++){
-            		self.debug.log("Baseline - ThroughSeg Number: " + j);
-            		self.debug.log("Baseline -  start: " + (metricsBaseline.ThroughSeg[j].startTime.getTime() - startRequest));
-            		self.debug.log("Baseline -  response: " + (metricsBaseline.ThroughSeg[j].responseTime.getTime() - startRequest));
-            		self.debug.log("Baseline -  finish: " + (metricsBaseline.ThroughSeg[j].finishTime.getTime()- startRequest));
-            		self.debug.log("Baseline -  range: " + metricsBaseline.ThroughSeg[j].range);
-            		self.debug.log("Baseline -  duration: " + metricsBaseline.ThroughSeg[j].duration);
-            		self.debug.log("Baseline -  bandwidth: " + metricsBaseline.ThroughSeg[j].bandwidth);
-            		self.debug.log("Baseline -  throughSeg: " + metricsBaseline.ThroughSeg[j].throughSeg);
-            	}
-				*/
-            	
-            	bufferMinTime1 = self.metricsBaselineExt.getBufferMinTime(time1, deltaBuffer, metrics, startRequest);
-            	self.debug.log("Baseline - bufferMinTime1: " + bufferMinTime1);
-            	bufferMinTime2 = self.metricsBaselineExt.getBufferMinTime(time2, deltaBuffer, metrics, startRequest);
-            	self.debug.log("Baseline - bufferMinTime2: " + bufferMinTime2);
-        		averageThrough = self.metricsBaselineExt.getAverageThrough(t1, time, metricsBaseline, startRequest);	
+        		self.debug.log("Antes de Average");
+
+            	averageThrough = self.metricsBaselineExt.getAverageThrough(t1, time, metricsBaseline, startRequest);	
         		self.debug.log("Baseline - averageThrough: " + averageThrough);
         		
-        		 if (isNaN(averageThrough) || isNaN(bufferMinTime1) || isNaN(bufferMinTime2)) {
+        		 if (isNaN(averageThrough)) {
                      self.debug.log("The averageThrough are NaN, bailing.");
-                     deferred.resolve(new MediaPlayer.rules.SwitchRequest(current, p, bDelay));
+             		 self.metricsBaselinesModel.addDelay(type, new Date, 0, current);
+                     deferred.resolve(new MediaPlayer.rules.SwitchRequest(current));
                  }else{
          			self.debug.log("Começa a regra");
 
@@ -219,10 +196,11 @@ MediaPlayer.rules.MillerRule = function () {
                           	}
                           	if(currentBufferLevel.level > bHigh){
                                  self.debug.log("Apply delay 1");
-                                 bDelay = bHigh - (lastRequest.mediaduration*1000);
+                                 bDelay = bHigh - lastRequest.mediaduration;
                           	}
                           }
-                          deferred.resolve(new MediaPlayer.rules.SwitchRequest(current, p, bDelay));
+                  		  self.metricsBaselinesModel.addDelay(type, new Date, bDelay , current);
+                          deferred.resolve(new MediaPlayer.rules.SwitchRequest(current));
                        }else{
                 		   self.debug.log("runningFastStart not true");
                     	   runningFastStart = false;
@@ -238,12 +216,12 @@ MediaPlayer.rules.MillerRule = function () {
                            }else if(currentBufferLevel.level < bHigh){
                         		 if(current == max || oneUpBandwidth >= ALPHA_5 * averageThrough){
                                         self.debug.log("Apply delay 2");
-                                        bDelay = Math.max(currentBuffer.level - (lastRequest.mediaduration*1000), bOpt);
+                                        bDelay = Math.max(currentBufferLevel.level - lastRequest.mediaduration, bOpt);
                         		 }
                            }else{
                         		 if(current == max || oneUpBandwidth >= ALPHA_5 * averageThrough){
                                        self.debug.log("Apply delay 3");
-                                       bDelay = Math.max(currentBuffer.level - (lastRequest.mediaduration*1000), bOpt);
+                                       bDelay = Math.max(currentBufferLevel.level - lastRequest.mediaduration, bOpt);
                         		 }else{
                                      	self.debug.log("Up One");
              								current += 1;
@@ -251,8 +229,9 @@ MediaPlayer.rules.MillerRule = function () {
                            }
                            self.debug.log("Current: " + current);
                            self.debug.log("bDelay: " + bDelay);
-
-                           deferred.resolve(new MediaPlayer.rules.SwitchRequest(current, p, bDelay));                            	   
+                    	
+                           self.metricsBaselinesModel.addDelay(type, new Date, bDelay , current);
+                           deferred.resolve(new MediaPlayer.rules.SwitchRequest(current));                            	   
                         }
                      }
         		 	time1 = time2 + 1;

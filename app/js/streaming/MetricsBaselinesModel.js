@@ -95,7 +95,26 @@ MediaPlayer.models.MetricsBaselinesModel = function () {
 
             this.metricBaselineUpdated(throughSeg.stream, "ThroughputSeg", throughSeg);
 
+        },
+        
+        addDelay: function (stream, now, delay, quality) {
+        	var vo = new MediaPlayer.vo.metrics.Delay();
+
+        	vo.t = now;
+       	 	vo.delay = delay;
+            vo.quality = quality; 
+           
+            this.debug.log("now: "+ now);
+            this.debug.log("delay: "+ delay);
+            this.debug.log("quality: "+quality);
+
+            this.getMetricsBaselineFor(stream).Delay.push(vo);
+            this.metricBaselineAdded(stream, "Delay", vo);
+            
+            this.debug.log("Add delay");
+            return vo;
         }
+
       
     };
 };
