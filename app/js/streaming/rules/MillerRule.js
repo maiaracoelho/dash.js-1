@@ -14,24 +14,24 @@ MediaPlayer.rules.MillerRule = function () {
         		var self = this, representation, bandwidth, quality, downloadTime, segDuration, through;
         		
         		for(var i = 0; i < throughList.length; i++){
-        			quality = throughList[i].quality;
-        			representation = availableRepresentations[quality];
-        			bandwidth = self.metricsExt.getBandwidthForRepresentation(representation.id);
-        			bandwidth /= 1000; //bit/ms
-        			
-        			downloadTime = throughList[i].finishTime.getTime() - throughList[i].responseTime.getTime();
-        			segDuration = throughList[i].duration * 1000; 
-        			
-        			through = (bandwidth * segDuration)/downloadTime; 
-        			
-        			//self.debug.log("bandwidth: " + bandwidth);
-        			//self.debug.log("through: " + through);
-        			
-            		self.metricsBaselinesModel.updateThroughputSeg(throughList[i], bandwidth, through);
-
+        			if(throughList[i].bandwidth == null || throughList[i].bandwidth == 0){
+        				quality = throughList[i].quality;
+        				representation = availableRepresentations[quality];
+        				bandwidth = self.metricsExt.getBandwidthForRepresentation(representation.id);
+        				bandwidth /= 1000; //bit/ms
+        				
+        				downloadTime = throughList[i].finishTime.getTime() - throughList[i].responseTime.getTime();
+        				segDuration = throughList[i].duration * 1000; 
+        				
+        				through = (throughList[i].sizeSeg * segDuration)/downloadTime; 
+        				
+        				self.debug.log("bandwidth: " + bandwidth);
+        				self.debug.log("through: " + through);
+        				
+        	    		self.metricsBaselinesModel.updateThroughputSeg(throughList[i], bandwidth, through);
+        			}
         		}
-	                     
-        	};
+            };
         
         return {
             debug: undefined,
@@ -81,7 +81,8 @@ MediaPlayer.rules.MillerRule = function () {
                 bufferMinTime2 = 0,
                 averageThrough = 0,
                 currentBandwidthMs = 0,
-                bDelay = 0;
+                bDelay = 0,
+                sizeSeg;
                 
             	self.debug.log("Baseline - Regra TR5 MillerRule...");
              	self.debug.log("Baseline - Tamanho HttpList: " + httpRequestList.length);
@@ -124,7 +125,8 @@ MediaPlayer.rules.MillerRule = function () {
                 }
             	
             	time2 = time1 + deltaBuffer + 1; 
-
+            	
+                sizeSeg = (lastRequest.trace[lastRequest.trace.length - 1].b) * 8;
             	downloadTime = (lastRequest.tfinish.getTime() - lastRequest.tresponse.getTime())/1000;
             	
             	max = self.manifestExt.getRepresentationCount1(data);
@@ -133,7 +135,7 @@ MediaPlayer.rules.MillerRule = function () {
             	currentBandwidth = self.manifestExt.getBandwidth1(representation1);
             	currentBandwidthMs = currentBandwidth/1000;
             	
-            	currentThrough = (currentBandwidth * lastRequest.mediaduration)/downloadTime ; 	//verificar valores
+            	currentThrough = (sizeSeg * lastRequest.mediaduration)/downloadTime ; 	//verificar valores
             	
             	insertThroughputs.call(self, metricsBaseline.ThroughSeg, availableRepresentations);
             	
