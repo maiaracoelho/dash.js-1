@@ -70,7 +70,7 @@ MediaPlayer.models.MetricsBaselinesModel = function () {
             return metricsBaseline;
         },
         
-        addThroughputSeg: function (req, now) {
+        addThroughputSeg: function (req, now, sizeSeg) {
         	var vo = new MediaPlayer.vo.metrics.ThroughSeg();
 
         	vo.currentTime = now;
@@ -78,7 +78,7 @@ MediaPlayer.models.MetricsBaselinesModel = function () {
        	 	vo.startTime = req.requestStartDate;
             vo.responseTime = req.firstByteDate;
             vo.finishTime = req.requestEndDate;
-            vo.range = req.range;
+            vo.sizeSeg = sizeSeg;
             vo.duration = req.duration;
             vo.quality = req.quality; 
 

@@ -179,7 +179,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
             return currentRepSwitch;
         },
 
-        getCurrentBufferLevel = function (metrics) { 
+        getCurrentBufferLevel = function (metrics) {
             if (metrics === null) {
                 return null;
             }

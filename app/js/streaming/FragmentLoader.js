@@ -115,7 +115,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                         request: request
                     });
                     
-                    preInsertThroughSeg.call(self, request);
+                    preInsertThroughSeg.call(self, request, bytes.byteLength);
                     
                 };
 
@@ -175,15 +175,16 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                 req.send();
         },
         
-        preInsertThroughSeg = function (request) {
-        	var now = new Date(), metricsBaselineThrough, self = this;
-            
+        preInsertThroughSeg = function (request, byteLength) {
+        	var now = new Date(), metricsBaselineThrough, self = this, sizeSeg;
+        	
+        	sizeSeg = byteLength * 8;
    			if (request != null) {
    				if (request.type != "Initialization Segment") {
    					
                     self.debug.log("Segment Duration: " + request.duration + ":" + request.type);
 
-   		        	self.metricsBaselinesModel.addThroughputSeg(request, now);
+   		        	self.metricsBaselinesModel.addThroughputSeg(request, now, sizeSeg);
 
    				}
    			}

@@ -51,7 +51,6 @@ MediaPlayer.rules.MillerRule = function () {
             checkIndex: function (current, metrics, data, metricsBaseline, availableRepresentations, type) {
 
                 var self = this,
-                httpRequestList = self.metricsExt.getHttpRequests(metrics),
                 lastRequest = self.metricsExt.getLastHttpRequest(metrics),
                 firstRequest = self.metricsExt.getFirstHttpRequest(metrics), 											//First Request n(0)
                 currentBufferLevel  = self.metricsExt.getCurrentBufferLevel(metrics),		//b(t)
@@ -85,7 +84,6 @@ MediaPlayer.rules.MillerRule = function () {
                 sizeSeg;
                 
             	self.debug.log("Baseline - Regra TR5 MillerRule...");
-             	self.debug.log("Baseline - Tamanho HttpList: " + httpRequestList.length);
              	self.debug.log("Baseline - Tamanho BufferLevel: " + metrics.BufferLevel.length);
              	self.debug.log("Baseline - Tamanho Through: " + metricsBaseline.ThroughSeg.length);
 
@@ -144,19 +142,16 @@ MediaPlayer.rules.MillerRule = function () {
         		self.debug.log("Baseline - time1: " + time1);
         		self.debug.log("Baseline - time2: " + time2);
 
-            	/*for(var j = 0; j < metrics.BufferLevel.length; j++){
-            		self.debug.log("Baseline - BufferLevel Number: " + j);
-            		self.debug.log("Baseline -  t: " + (metrics.BufferLevel[j].t.getTime() - startRequest));
-            		self.debug.log("Baseline -  level: " + metrics.BufferLevel[j].level);
-            	}*/
-				
+            	if (lastRequest.stream == 'audio'){
+	                return Q.when(new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE));
+            	}
+            	
             	if(runningFastStart){
             		bufferMinTime1 = self.metricsBaselineExt.getBufferMinTime(time1, deltaBuffer, metrics, startRequest);
                 	self.debug.log("Baseline - bufferMinTime1: " + bufferMinTime1);
                 	bufferMinTime2 = self.metricsBaselineExt.getBufferMinTime(time2, deltaBuffer, metrics, startRequest);
                 	self.debug.log("Baseline - bufferMinTime2: " + bufferMinTime2);
             	}
-        		self.debug.log("Antes de Average");
 
             	averageThrough = self.metricsBaselineExt.getAverageThrough(t1, time, metricsBaseline, startRequest);	
         		self.debug.log("Baseline - averageThrough: " + averageThrough);
@@ -199,6 +194,7 @@ MediaPlayer.rules.MillerRule = function () {
                           	if(currentBufferLevel.level > bHigh){
                                  self.debug.log("Apply delay 1");
                                  bDelay = bHigh - lastRequest.mediaduration;
+                                 
                           	}
                           }
                   		  self.metricsBaselinesModel.addDelay(type, new Date, bDelay , current);
