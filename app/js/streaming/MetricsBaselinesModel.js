@@ -1,12 +1,40 @@
 
 MediaPlayer.models.MetricsBaselinesModel = function () {
     "use strict";
-
+    var dateExecution,
+    	mpd, 
+    	bDelay;
+    
     return {
     	debug : undefined,
     	system : undefined,
         eventBus: undefined,
         streamMetrics: {},
+        
+        getDateExecution: function () {
+            return dateExecution;
+        },
+
+        setDateExecution: function (value) {
+        	dateExecution = value;
+        },
+        
+        getUrlMpd: function () {
+            return mpd;
+        },
+
+        setUrlMpd: function (value) {
+        	mpd = value;
+        },
+        
+        getBdelay: function () {
+            return bDelay;
+        },
+
+        setBdelay: function (value) {
+        	bDelay = value;
+        },
+        
         metricsBaselineChanged: function () {
             this.eventBus.dispatchEvent({
                 type: "metricsBaselineChanged",
@@ -95,20 +123,6 @@ MediaPlayer.models.MetricsBaselinesModel = function () {
 
             this.metricBaselineUpdated(throughSeg.stream, "ThroughputSeg", throughSeg);
 
-        },
-        
-        addDelay: function (stream, now, delay, quality) {
-        	var vo = new MediaPlayer.vo.metrics.Delay();
-
-        	vo.t = now;
-       	 	vo.delay = delay;
-            vo.quality = quality; 
-
-            this.getMetricsBaselineFor(stream).Delay.push(vo);
-            this.metricBaselineAdded(stream, "Delay", vo);
-            
-            this.debug.log("Add delay");
-            return vo;
         }
 
       

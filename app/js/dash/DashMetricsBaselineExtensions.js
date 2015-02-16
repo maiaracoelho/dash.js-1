@@ -38,13 +38,14 @@ Dash.dependencies.DashMetricsBaselineExtensions = function () {
    	 	startTime = Math.floor(startTimeTemp);
    	 	finishTime = Math.floor(finishTimeTemp);
    	 
-   	 	//this.debug.log("Baseline - timeTarget: " + timeTarget+" ms");
-    	//this.debug.log("Baseline - startTime: "+ startTime);
-    	//this.debug.log("Baseline - finishTime: "+ finishTime);
+   	 	this.debug.log("Baseline - timeTarget: " + timeTarget+" ms");
+    	this.debug.log("Baseline - startTime: "+ startTime);
+    	this.debug.log("Baseline - finishTime: "+ finishTime);
    	 	
 	 	while(begin < end){
-
 	 		bufferTime = bufferList[begin].t.getTime() - startRequestTime;
+	    	this.debug.log("Baseline - bufferTime: "+ bufferTime);
+	 		
 	 		if (bufferTime >= startTime && bufferTime <= finishTime){
 	 			bufferMinArrayTemp.push(bufferList[begin].level);
 	 		}

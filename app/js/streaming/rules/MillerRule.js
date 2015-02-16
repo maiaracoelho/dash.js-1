@@ -9,6 +9,7 @@ MediaPlayer.rules.MillerRule = function () {
         	deltaBuffer=1000, 
         	time1 = 0, 
         	t1 = 0,
+        	time2 = 0,
         	      
         	insertThroughputs = function (throughList, availableRepresentations) {
         		var self = this, representation, bandwidth, quality, downloadTime, segDuration, through;
@@ -60,7 +61,6 @@ MediaPlayer.rules.MillerRule = function () {
                 bOpt=0.5*(bLow+bHigh),
                 downloadTime,															
                 currentThrough,																	//p_n(t)
-                time2,
                 time,																		//current Time of session
                 now = new Date(),															//current timestamp
                 deferred,    
@@ -114,7 +114,7 @@ MediaPlayer.rules.MillerRule = function () {
 
              	deferred = Q.defer();
              	
-                //O início da sessão como um todo se acontece a partir do momento em que a primeira requisição de mídia é feita.
+                //O início da sessão como um todo so acontece a partir do momento em que a primeira requisição de mídia é feita.
             	startRequest = firstRequest.trequest.getTime(); 
             	time = lastRequest.tfinish.getTime() - startRequest;
             	
@@ -122,30 +122,30 @@ MediaPlayer.rules.MillerRule = function () {
             		t1 = time - deltaTime;
                 }
             	
-            	time2 = time1 + deltaBuffer + 1; 
-            	
+            	if(time >= deltaBuffer){
+                	time2 = time - deltaBuffer; 
+            	}
+
                 sizeSeg = (lastRequest.trace[lastRequest.trace.length - 1].b) * 8;
             	downloadTime = (lastRequest.tfinish.getTime() - lastRequest.tresponse.getTime())/1000;
-            	
             	max = self.manifestExt.getRepresentationCount1(data);
             	max -= 1;
             	representation1 = self.manifestExt.getRepresentationFor1(current, data);
             	currentBandwidth = self.manifestExt.getBandwidth1(representation1);
             	currentBandwidthMs = currentBandwidth/1000;
-            	
-            	currentThrough = (sizeSeg * lastRequest.mediaduration)/downloadTime ; 	//verificar valores
+            	currentThrough = (sizeSeg * lastRequest.mediaduration)/downloadTime ; 	
             	
             	insertThroughputs.call(self, metricsBaseline.ThroughSeg, availableRepresentations);
+            	
+            	if (lastRequest.stream == 'audio'){
+	                return Q.when(new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE));
+            	}
             	
         		self.debug.log("Baseline - time: " + time);
         		self.debug.log("Baseline - t1: " + t1);
         		self.debug.log("Baseline - time1: " + time1);
         		self.debug.log("Baseline - time2: " + time2);
 
-            	if (lastRequest.stream == 'audio'){
-	                return Q.when(new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE));
-            	}
-            	
             	if(runningFastStart){
             		bufferMinTime1 = self.metricsBaselineExt.getBufferMinTime(time1, deltaBuffer, metrics, startRequest);
                 	self.debug.log("Baseline - bufferMinTime1: " + bufferMinTime1);
@@ -156,10 +156,10 @@ MediaPlayer.rules.MillerRule = function () {
             	averageThrough = self.metricsBaselineExt.getAverageThrough(t1, time, metricsBaseline, startRequest);	
         		self.debug.log("Baseline - averageThrough: " + averageThrough);
         		
-        		 if (isNaN(averageThrough)) {
-                     self.debug.log("The averageThrough are NaN, bailing.");
-             		 self.metricsBaselinesModel.addDelay(type, new Date, 0, current);
-                     deferred.resolve(new MediaPlayer.rules.SwitchRequest(current));
+        		 if (isNaN(averageThrough) || isNaN (bufferMinTime1) || isNaN (bufferMinTime2)) {
+                     self.debug.log("The averageThrough or bufferMinTime1 or bufferMinTime2 are NaN, bailing.");
+             		 self.metricsBaselinesModel.setBdelay(bdelay);
+		             return Q.when(new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE));
                  }else{
          			self.debug.log("Começa a regra");
 
@@ -194,11 +194,10 @@ MediaPlayer.rules.MillerRule = function () {
                           	if(currentBufferLevel.level > bHigh){
                                  self.debug.log("Apply delay 1");
                                  bDelay = bHigh - lastRequest.mediaduration;
-                                 
                           	}
                           }
-                  		  self.metricsBaselinesModel.addDelay(type, new Date, bDelay , current);
-                          deferred.resolve(new MediaPlayer.rules.SwitchRequest(current));
+                  		 self.metricsBaselinesModel.setBdelay(bdelay);
+                         deferred.resolve(new MediaPlayer.rules.SwitchRequest(current));
                        }else{
                 		   self.debug.log("runningFastStart not true");
                     	   runningFastStart = false;
@@ -215,6 +214,7 @@ MediaPlayer.rules.MillerRule = function () {
                         		 if(current == max || oneUpBandwidth >= ALPHA_5 * averageThrough){
                                         self.debug.log("Apply delay 2");
                                         bDelay = Math.max(currentBufferLevel.level - lastRequest.mediaduration, bOpt);
+
                         		 }
                            }else{
                         		 if(current == max || oneUpBandwidth >= ALPHA_5 * averageThrough){
@@ -227,11 +227,12 @@ MediaPlayer.rules.MillerRule = function () {
                            }
                            self.debug.log("Current: " + current);
                            self.debug.log("bDelay: " + bDelay);
-                    	
-                           self.metricsBaselinesModel.addDelay(type, new Date, bDelay , current);
+                           
+                    		self.metricsBaselinesModel.setBdelay(bdelay);
                            deferred.resolve(new MediaPlayer.rules.SwitchRequest(current));                            	   
                         }
                      }
+        		 	
         		 	time1 = time2 + 1;
         		 	
         		 	return deferred.promise;
