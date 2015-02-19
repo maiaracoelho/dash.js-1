@@ -304,6 +304,26 @@ Dash.dependencies.DashMetricsExtensions = function () {
             return FirstHttp;
         },
         
+        getFirstBufferLevel = function (metrics) {
+            if (metrics === null) {
+                return null;
+            }
+
+            var bufferLevel = metrics.BufferLevel,
+                bufferLevelLength,
+                bufferLevelFirstIndex,
+                currentBufferLevel;
+
+            if (bufferLevel === null || bufferLevel.length <= 0) {
+                return null;
+            }
+
+            bufferLevelFirstIndex = 0;
+
+            currentBufferLevel = bufferLevel[bufferLevelFirstIndex];
+            return currentBufferLevel;
+        },
+        
         /**
          * @author Maiara Coelho
          * @param {metrics} Metrics
@@ -422,6 +442,7 @@ Dash.dependencies.DashMetricsExtensions = function () {
         getMaxIndexForBufferType : getMaxIndexForBufferType,
         getCurrentRepresentationSwitch : getCurrentRepresentationSwitch,
         getCurrentBufferLevel : getCurrentBufferLevel,
+        getFirstBufferLevel : getFirstBufferLevel,
         getCurrentHttpRequest : getCurrentHttpRequest,
         getHttpRequests : getHttpRequests,
         getFirstHttpRequest : getFirstHttpRequest,

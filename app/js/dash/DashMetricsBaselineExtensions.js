@@ -44,7 +44,7 @@ Dash.dependencies.DashMetricsBaselineExtensions = function () {
    	 	
 	 	while(begin < end){
 	 		bufferTime = bufferList[begin].t.getTime() - startRequestTime;
-	    	this.debug.log("Baseline - bufferTime: "+ bufferTime);
+	    	//this.debug.log("Baseline - bufferTime: "+ bufferTime);
 	 		
 	 		if (bufferTime >= startTime && bufferTime <= finishTime){
 	 			bufferMinArrayTemp.push(bufferList[begin].level);
@@ -168,27 +168,6 @@ Dash.dependencies.DashMetricsBaselineExtensions = function () {
         }
 
         return !metricsBaseline.Delay ? metricsBaseline.Delay : [];
-    },
-    
-    getLastDelay = function (metricsBaseline) { //informacoes da ultima transação http respondida, ou seja de n(t)
-
-        if (metricsBaseline === null) {
-            return null;
-        }
-
-        var delayList = metricsBaseline.Delay,
-        	delayListLength,
-        	delayListLastIndex,
-            currentDelayList = null;
-        
-        if (delayList === null || delayList.length <= 0) {
-            return null;
-        }
-
-        delayListLength = delayList.length -1;
-        currentDelayList = delayList[delayListLastIndex];
-        
-        return currentDelayList;
     };
 
     return {
@@ -197,7 +176,6 @@ Dash.dependencies.DashMetricsBaselineExtensions = function () {
     	getBufferMinTime : getBufferMinTime,
     	getAverageThrough : getAverageThrough,
     	getDelays : getDelays,
-    	getLastDelay : getLastDelay
     };
 };
 
