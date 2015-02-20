@@ -22,6 +22,50 @@ Dash.dependencies.DashMetricsBaselineExtensions = function () {
         }
     },
     
+    getMin = function (timeTarget, deltaBuffer, bufferList) {
+
+   	 	var bufferMinArrayTemp = [],
+   	 		startTime, 
+   	 		finishTime, 
+   	 		startTimeTemp, 
+   	 		finishTimeTemp, 
+   	 		bufferTime;
+
+   	 	startTimeTemp = (timeTarget/deltaBuffer) * deltaBuffer;
+   	 	finishTimeTemp = startTimeTemp + deltaBuffer;
+   	 	startTime = Math.floor(startTimeTemp);
+   	 	finishTime = Math.floor(finishTimeTemp);
+   	 
+   	 	//this.debug.log("Baseline - timeTarget: " + timeTarget);
+    	//this.debug.log("Baseline - startTime: "+ startTime);
+    	//this.debug.log("Baseline - finishTime: "+ finishTime);
+   	 	
+    	while(startTime < finishTime){
+	 		bufferMinArrayTemp.push(bufferList[startTime].level);
+	 		startTime++;
+	 	} 
+	 	return this.min(bufferMinArrayTemp);
+    },
+    
+    getBufferMin = function (deltaBuffer, metrics) {
+   	 	var bufferList = metrics.BufferLevel, i,
+   	 		incremental, min;
+   	 	   	 	
+	 	for(i = 0; i < bufferList.length; i+=deltaBuffer){
+
+	 		if ((i+deltaBuffer) >= bufferList.length){
+	 			return incremental;
+	 		}
+	 		if (this.getMin(i, deltaBuffer, bufferList) <= this.getMin(i + deltaBuffer, deltaBuffer, bufferList)){
+	 			incremental = true;
+	 		}else {
+	 			incremental = false;
+	 		}
+	 	} 
+	 	return incremental;
+    },
+    
+    /*
     getBufferMinTime = function (timeTarget, deltaBuffer, metrics, startRequestTime) {
    	 	var bufferList = metrics.BufferLevel, 
    	 		bufferMinArrayTemp = [],
@@ -55,55 +99,6 @@ Dash.dependencies.DashMetricsBaselineExtensions = function () {
 
 	 	return this.min(bufferMinArrayTemp);
     },
-    
-    /*
-    getBufferMinTeenTime = function (numSegs, metricsBaseline) {
-        if (metricsBaseline == null) {
-            return [];
-        }
-        
-        var bufferLevelList = metricsBaseline.BufferLevel,
-        	bufferLevelListLength,
-        	bufferLevelListIndex,
-        	bufferLevelListTemp,
-        	bufferMinArrayTemp = [],
-        	startTime, 
-   	 		finishTime, 
-   	 		startTimeTemp, 
-   	 		finishTimeTemp, 
-   	 		begin = 0, 
-   	 		end = bufferList.length, 
-   	 		bufferTime;
-    
-        if (bufferLevelList == null || bufferLevelList.length <= 0) {
-            return [];
-        }
-
-        bufferLevelListLength = bufferLevelList.length;
-        bufferLevelListIndex = bufferLevelListLength - 1;
-
-        while (bufferLevelListIndex >= bufferLevelListLength - numSegs) {
-        	bufferLevelListTemp.push(bufferLevelList[bufferLevelListIndex].bufferLevel);
-        	bufferLevelListIndex -= 1;
-        }
-        
-        startTimeTemp = (timeTarget/deltaBuffer) * deltaBuffer;
-   	 	finishTimeTemp = startTimeTemp + deltaBuffer;
-   	 	startTime = Math.floor(startTimeTemp);
-   	 	finishTime = Math.floor(finishTimeTemp);
-		
-   	 	while(begin < end){
-
-	 		bufferTime = bufferList[begin].t.getTime() - startRequestTime;
-	 		if (bufferTime >= startTime && bufferTime <= finishTime){
-	 			bufferMinArrayTemp.push(bufferList[begin].level);
-	 		}
-	 		begin++;
-	 	} 
-   	 	this.debug.log("bufferMinArrayTemp: "+ bufferMinArrayTemp.length);
-
-	 	return this.min(bufferMinArrayTemp);
-    }, 
     */
     
     getAverageThrough = function (time1, time, metricsBaseline, startSessionTime) {
@@ -173,7 +168,8 @@ Dash.dependencies.DashMetricsBaselineExtensions = function () {
     return {
     	debug : undefined,
     	min : min,
-    	getBufferMinTime : getBufferMinTime,
+    	getMin : getMin,
+    	getBufferMin : getBufferMin,
     	getAverageThrough : getAverageThrough,
     	getDelays : getDelays,
     };

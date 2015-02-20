@@ -6,7 +6,7 @@ MediaPlayer.rules.MillerRule = function () {
     
         var runningFastStart=true,
         	deltaTime=10000, 
-        	deltaBuffer=1000,
+        	deltaBuffer=5,
 
         	        	      
         	insertThroughputs = function (throughList, availableRepresentations) {
@@ -53,7 +53,6 @@ MediaPlayer.rules.MillerRule = function () {
                 lastRequest = self.metricsExt.getLastHttpRequest(metrics),
                 firstRequest = self.metricsExt.getFirstHttpRequest(metrics), 											//First Request n(0)
                 currentBufferLevel  = self.metricsExt.getCurrentBufferLevel(metrics),									//b(t)
-                firstBufferLevel  = self.metricsExt.getFirstBufferLevel(metrics),									//b(t)
                 bMin=8,
                 bLow=12,
                 bHigh=50,																								//self.metricsExt.getMaxIndexForBufferType(lastRequest.stream)
@@ -61,8 +60,6 @@ MediaPlayer.rules.MillerRule = function () {
                 downloadTime,															
                 currentThrough,																							//p_n(t)
                 time, 
-                timeCurrent, 
-                time1 = 0,
                 t1 = 0,
                 now = new Date(),																						//current timestamp
                 deferred,    
@@ -79,8 +76,7 @@ MediaPlayer.rules.MillerRule = function () {
                 max,
                 startRequest,
                 startBuffer,
-                bufferMinTime1 = 0,
-                bufferMinTime2 = 0,
+                bufferMinIncr,
                 averageThrough = 0,
                 currentBandwidthMs = 0,
                 bDelay = 0,
@@ -119,19 +115,13 @@ MediaPlayer.rules.MillerRule = function () {
              	
                 //O início da sessão como um todo so acontece a partir do momento em que a primeira requisição de mídia é feita.
             	startRequest = firstRequest.trequest.getTime(); 
-            	startBuffer = firstBufferLevel.t.getTime(); 
 
             	time = lastRequest.tfinish.getTime() - startRequest;
-            	timeCurrent = currentBufferLevel.t.getTime() - startBuffer;
             	
             	if (time >= deltaTime){
             		t1 = time - deltaTime;
                 }
             	
-            	if (timeCurrent >= deltaBuffer){
-            		time1 = timeCurrent - deltaBuffer;
-            	}
-            	 
                 sizeSeg = (lastRequest.trace[lastRequest.trace.length - 1].b) * 8;
             	downloadTime = (lastRequest.tfinish.getTime() - lastRequest.tresponse.getTime())/1000;
             	max = self.manifestExt.getRepresentationCount1(data);
@@ -148,27 +138,18 @@ MediaPlayer.rules.MillerRule = function () {
             	}
             	
         		self.debug.log("Baseline - time: " + time);
-        		self.debug.log("Baseline - time: " + timeCurrent);
-        		self.debug.log("Baseline - time: " + (now - startBuffer));
         		self.debug.log("Baseline - t1: " + t1);
-        		self.debug.log("Baseline - time1: " + time1);
-        		self.debug.log("Baseline - time2: " + time2);
 
             	if(runningFastStart){
-            		bufferMinTime1 = self.metricsBaselineExt.getBufferMinTime(time1, deltaBuffer, metrics, startRequest);
-                	self.debug.log("Baseline - bufferMinTime1: " + bufferMinTime1);
-                	bufferMinTime2 = self.metricsBaselineExt.getBufferMinTime(time2, deltaBuffer, metrics, startRequest);
-                	self.debug.log("Baseline - bufferMinTime2: " + bufferMinTime2);
+            		bufferMinIncr = self.metricsBaselineExt.getBufferMin(deltaBuffer, metrics);
+                	self.debug.log("Baseline - bufferMinIncr: " + bufferMinIncr);
             	}
-
+            	
             	averageThrough = self.metricsBaselineExt.getAverageThrough(t1, time, metricsBaseline, startRequest);	
         		self.debug.log("Baseline - averageThrough: " + averageThrough);
-    		 	
-	             return Q.when(new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE));
-
         		
-        		 if (isNaN(averageThrough) || isNaN (bufferMinTime1) || isNaN (bufferMinTime2)) {
-                     self.debug.log("The averageThrough or bufferMinTime1 or bufferMinTime2 are NaN, bailing.");
+        		 if (isNaN(averageThrough)) {
+                     self.debug.log("The averageThrough is NaN, bailing.");
              		 self.metricsBaselinesModel.setBdelay(bdelay);
 		             return Q.when(new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE));
                  }else{
@@ -182,7 +163,7 @@ MediaPlayer.rules.MillerRule = function () {
 
                 	 if(runningFastStart &&
                              current != max &&
-                             bufferMinTime1 <= bufferMinTime2 &&													//para todo t1<t2<=t *
+                             bufferMinIncr &&													//para todo t1<t2<=t *
                              currentBandwidthMs <= ALPHA_1 * averageThrough){ 
                           	
                			self.debug.log("runningFastStart");
@@ -213,24 +194,40 @@ MediaPlayer.rules.MillerRule = function () {
                 		   self.debug.log("runningFastStart not true");
                     	   runningFastStart = false;
                     	                          	   
-                           if(currentBufferLevel.level < bMin){
+                           if(currentBufferLevel.level < bMin && current != 0){
                                 self.debug.log("Down MIN");
                                 current = 0;
                            }else if(currentBufferLevel.level < bLow){
                                 if(current != 0 && currentBandwidth >= currentThrough){
                                       self.debug.log("Down One");
                                       current -= 1;
+                                }else{
+                                    self.debug.log("No change1");
+
+                            		self.metricsBaselinesModel.setBdelay(bdelay);
+               		             	return Q.when(new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE));
                                 }
                            }else if(currentBufferLevel.level < bHigh){
                         		 if(current == max || oneUpBandwidth >= ALPHA_5 * averageThrough){
                                         self.debug.log("Apply delay 2");
-                                        bDelay = Math.max(currentBufferLevel.level - (lastRequest.mediaduration/1000), bOpt);
+                                        self.debug.log("No change2");
 
+                                        bDelay = Math.max(currentBufferLevel.level - (lastRequest.mediaduration/1000), bOpt);
+                   		             	return Q.when(new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE));
                         		 }
+                        		 else{
+                                     self.debug.log("No change3");
+
+                             		self.metricsBaselinesModel.setBdelay(bdelay);
+                             		return Q.when(new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE));
+                                 }
                            }else{
                         		 if(current == max || oneUpBandwidth >= ALPHA_5 * averageThrough){
                                        self.debug.log("Apply delay 3");
+                                       self.debug.log("No change4");
+
                                        bDelay = Math.max(currentBufferLevel.level - (lastRequest.mediaduration/1000), bOpt);
+                  		             return Q.when(new MediaPlayer.rules.SwitchRequest(MediaPlayer.rules.SwitchRequest.prototype.NO_CHANGE));
                         		 }else{
                                      	self.debug.log("Up One");
              								current += 1;
