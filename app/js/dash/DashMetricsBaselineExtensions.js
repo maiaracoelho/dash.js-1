@@ -28,15 +28,14 @@ Dash.dependencies.DashMetricsBaselineExtensions = function () {
    	 		startTime, 
    	 		finishTime, 
    	 		startTimeTemp, 
-   	 		finishTimeTemp, 
-   	 		bufferTime;
-
+   	 		finishTimeTemp;
+   	 	
    	 	startTimeTemp = (timeTarget/deltaBuffer) * deltaBuffer;
    	 	finishTimeTemp = startTimeTemp + deltaBuffer;
    	 	startTime = Math.floor(startTimeTemp);
    	 	finishTime = Math.floor(finishTimeTemp);
    	 
-   	 	//this.debug.log("Baseline - timeTarget: " + timeTarget);
+   	 	this.debug.log("Baseline - timeTarget: " + timeTarget);
     	//this.debug.log("Baseline - startTime: "+ startTime);
     	//this.debug.log("Baseline - finishTime: "+ finishTime);
    	 	
@@ -44,12 +43,13 @@ Dash.dependencies.DashMetricsBaselineExtensions = function () {
 	 		bufferMinArrayTemp.push(bufferList[startTime].level);
 	 		startTime++;
 	 	} 
+   	 	this.debug.log("bufferMinArrayTemp: " + bufferMinArrayTemp.length);
+
 	 	return this.min(bufferMinArrayTemp);
     },
     
     getBufferMin = function (deltaBuffer, metrics) {
-   	 	var bufferList = metrics.BufferLevel, i,
-   	 		incremental, min;
+   	 	var bufferList = metrics.BufferLevel, i, incremental;
    	 	   	 	
 	 	for(i = 0; i < bufferList.length; i+=deltaBuffer){
 
@@ -155,14 +155,6 @@ Dash.dependencies.DashMetricsBaselineExtensions = function () {
         }
 
         return !metricsBaseline.ThroughSeg ? metricsBaseline.ThroughSeg : [];
-    },
-    
-    getDelays = function (metricsBaseline) {
-        if (metricsBaseline == null) {
-            return [];
-        }
-
-        return !metricsBaseline.Delay ? metricsBaseline.Delay : [];
     };
 
     return {
@@ -171,7 +163,7 @@ Dash.dependencies.DashMetricsBaselineExtensions = function () {
     	getMin : getMin,
     	getBufferMin : getBufferMin,
     	getAverageThrough : getAverageThrough,
-    	getDelays : getDelays,
+    	getThroughSegs : getThroughSegs
     };
 };
 

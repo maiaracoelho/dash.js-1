@@ -17,7 +17,6 @@ MediaPlayer.dependencies.FragmentLoader = function () {
     var RETRY_ATTEMPTS = 3,
         RETRY_INTERVAL = 500,
         xhrs = [],
-        bufferCont = null,
 
         doLoad = function (request, remainingAttempts) {
             var req = new XMLHttpRequest(),
@@ -49,9 +48,8 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                                                   [0]);
                 lastTraceTime = request.requestStartDate;
 
-                req.open("GET", self.tokenAuthentication.addTokenAsQueryArg(request.url), true);
+                req.open("GET", request.url, true);
                 req.responseType = "arraybuffer";
-                req = self.tokenAuthentication.setTokenInRequestHeader(req);
 /*
                 req.setRequestHeader("Cache-Control", "no-cache");
                 req.setRequestHeader("Pragma", "no-cache");
@@ -97,7 +95,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                     latency = (request.firstByteDate.getTime() - request.requestStartDate.getTime());
                     download = (request.requestEndDate.getTime() - request.firstByteDate.getTime());
 
-                    self.debug.log("Baseline - loaded " +  request.streamType + ":" + request.type + ":" + request.startTime + " (" + req.status + ", " + latency + "ms, " + download + "ms)");
+                    self.debug.log("loaded bytes.byteLength: " + bytes.byteLength + ": "+ request.streamType + ":" + request.type + ":" + request.startTime + " (" + req.status + ", " + latency + "ms, " + download + "ms)");
 
                     httpRequestMetrics.tresponse = request.firstByteDate;
                     httpRequestMetrics.tfinish = request.requestEndDate;
@@ -107,16 +105,14 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                                                       currentTime,
                                                       currentTime.getTime() - lastTraceTime.getTime(),
                                                       [bytes ? bytes.byteLength : 0]);
-                    
                     lastTraceTime = currentTime;
-                    
+
                     request.deferred.resolve({
                         data: bytes,
                         request: request
                     });
                     
                     preInsertThroughSeg.call(self, request, bytes.byteLength);
-                    
                 };
 
                 req.onloadend = req.onerror = function () {
@@ -145,19 +141,18 @@ MediaPlayer.dependencies.FragmentLoader = function () {
                     latency = (request.firstByteDate.getTime() - request.requestStartDate.getTime());
                     download = (request.requestEndDate.getTime() - request.firstByteDate.getTime());
 
-                    self.debug.log("Baseline - failed " + request.streamType + ":" + request.type + ":" + request.startTime + " (" + req.status + ", " + latency + "ms, " + download + "ms)");
+                    self.debug.log("failed " + request.streamType + ":" + request.type + ":" + request.startTime + " (" + req.status + ", " + latency + "ms, " + download + "ms)");
 
                     httpRequestMetrics.tresponse = request.firstByteDate;
                     httpRequestMetrics.tfinish = request.requestEndDate;
                     httpRequestMetrics.responsecode = req.status;
-                    
+
                     self.metricsModel.appendHttpTrace(httpRequestMetrics,
                                                       currentTime,
                                                       currentTime.getTime() - lastTraceTime.getTime(),
                                                       [bytes ? bytes.byteLength : 0]);
                     lastTraceTime = currentTime;
-                    
-                  
+
 
                     if (remainingAttempts > 0) {
                         self.debug.log("Failed loading segment: " + request.streamType + ":" + request.type + ":" + request.startTime + ", retry in " + RETRY_INTERVAL + "ms" + " attempts: " + remainingAttempts);
@@ -177,19 +172,13 @@ MediaPlayer.dependencies.FragmentLoader = function () {
         
         preInsertThroughSeg = function (request, byteLength) {
         	var now = new Date(), metricsBaselineThrough, self = this, sizeSeg;
-        	
-        	sizeSeg = byteLength * 8;
-   			if (request != null) {
+        		sizeSeg = byteLength * 8;
    				if (request.type != "Initialization Segment") {
-   					
-                    self.debug.log("Segment Duration: " + request.duration + ":" + request.type);
-
+                    self.debug.log("Segment Duration: " + request.duration + ": " + request.type + ": " + request.streamType);
    		        	self.metricsBaselinesModel.addThroughputSeg(request, now, sizeSeg);
-
    				}
-   			}
         },
-        
+
         checkForExistence = function(request) {
             var req = new XMLHttpRequest(),
                 isSuccessful = false;
@@ -212,15 +201,11 @@ MediaPlayer.dependencies.FragmentLoader = function () {
 
             req.send();
         };
-        
+
     return {
-        system: undefined,
         metricsModel: undefined,
-        manifestModel: undefined,
         errHandler: undefined,
         debug: undefined,
-        tokenAuthentication:undefined,
-        manifestExt: undefined,
         metricsBaselinesModel: undefined,
 
         load: function (req) {
@@ -231,7 +216,7 @@ MediaPlayer.dependencies.FragmentLoader = function () {
 
             req.deferred = Q.defer();
             doLoad.call(this, req, RETRY_ATTEMPTS);
-            
+
             return req.deferred.promise;
         },
 
