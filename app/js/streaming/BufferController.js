@@ -1054,7 +1054,8 @@ MediaPlayer.dependencies.BufferController = function () {
                 self.bufferExt.decideBufferLength(manifestMinBufferTime, periodInfo.duration, waitingForBuffer).then(
                     function (time) {
                         //self.debug.log("Min Buffer time: " + time);
-                        self.setMinBufferTime(time);
+                    	var delay = self.metricsBaselinesModel.getBdelay();
+                        self.setMinBufferTime(delay);
                         self.requestScheduler.adjustExecuteInterval();
                     }
                 );
@@ -1072,11 +1073,7 @@ MediaPlayer.dependencies.BufferController = function () {
                         if (quality !== undefined) {
                             newQuality = quality;
                         }
-                        
-                        /** Aplicando o Delay se ele for diferente de zero - Baseline TR5 Maiara**/
-                        	//self.setDelay(delay);
-                        /****/
-                        
+                       
                         qualityChanged = (quality !== requiredQuality);
 
                         if (qualityChanged === true) {
@@ -1199,16 +1196,13 @@ MediaPlayer.dependencies.BufferController = function () {
             self.indexHandler.setIsDynamic(isDynamic);
             /** Aplicando o Delay se ele for diferente de zero - Baseline TR5 Maiara**/
             
-            //if (newDelay == 0){
             self.bufferExt.decideBufferLength(manifest.minBufferTime, periodInfo, waitingForBuffer).then(
                         function (time) {
                             //self.debug.log("Min Buffer time: " + time);
-                            self.setMinBufferTime(time);
+                        	var delay = self.metricsBaselinesModel.getBdelay();
+                            self.setMinBufferTime(delay);
                         }
                     );
-           // }else{
-            //	self.setMinBufferTime(newDelay);
-           // }
             /****/
         },
 

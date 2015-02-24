@@ -66,6 +66,8 @@ MediaPlayer.di.Context = function () {
             this.system.mapClass('requestScheduler', MediaPlayer.dependencies.RequestScheduler);
             this.system.mapSingleton('schedulerExt', MediaPlayer.dependencies.SchedulerExtensions);
             this.system.mapClass('schedulerModel', MediaPlayer.dependencies.SchedulerModel);
+            this.system.mapClass('webServiceClient', MediaPlayer.dependencies.WebServiceLoader);
+
         }
     };
 };

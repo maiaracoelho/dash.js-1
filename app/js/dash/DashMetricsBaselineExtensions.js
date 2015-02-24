@@ -4,143 +4,78 @@
 Dash.dependencies.DashMetricsBaselineExtensions = function () {
     "use strict";
     
-    var min = function(values) {
-
-        if(values.length == 0) {
-
-            return NaN;
-        } else if(values.length == 1) {
-            var val = values.pop();
-            if ( typeof val == "number" ) {
-                return val;
-            } else {
-                return NaN;
-            }
-        } else {
-            var val = values.pop();
-            return Math.min(val, this.min(values))
-        }
-    },
-    
-    getMin = function (timeTarget, deltaBuffer, bufferList) {
+    var getMin = function (timeTarget, deltaBuffer, bufferList) {
 
    	 	var bufferMinArrayTemp = [],
    	 		startTime, 
-   	 		finishTime, 
-   	 		startTimeTemp, 
-   	 		finishTimeTemp;
+   	 		finishTime,
+   	 		min;
    	 	
-   	 	startTimeTemp = (timeTarget/deltaBuffer) * deltaBuffer;
-   	 	finishTimeTemp = startTimeTemp + deltaBuffer;
-   	 	startTime = Math.floor(startTimeTemp);
-   	 	finishTime = Math.floor(finishTimeTemp);
+   	 	startTime = timeTarget;
+   	 	finishTime = timeTarget + deltaBuffer;
    	 
-   	 	this.debug.log("Baseline - timeTarget: " + timeTarget);
+   	 	//this.debug.log("Baseline - timeTarget: " + timeTarget);
     	//this.debug.log("Baseline - startTime: "+ startTime);
     	//this.debug.log("Baseline - finishTime: "+ finishTime);
+   	 	min = bufferList[startTime].level;
    	 	
     	while(startTime < finishTime){
-	 		bufferMinArrayTemp.push(bufferList[startTime].level);
+    		if(bufferList[startTime].level < min){
+    			min = bufferList[startTime].level;
+    		}
 	 		startTime++;
 	 	} 
-   	 	this.debug.log("bufferMinArrayTemp: " + bufferMinArrayTemp.length);
 
-	 	return this.min(bufferMinArrayTemp);
+	 	return min;
     },
     
     getBufferMin = function (deltaBuffer, metrics) {
-   	 	var bufferList = metrics.BufferLevel, i, incremental;
+   	 	var bufferList = metrics.BufferLevel, i, incremental = true, min1, min2;
    	 	   	 	
-	 	for(i = 0; i < bufferList.length; i+=deltaBuffer){
+	 	for(i = 0; i < bufferList.length - deltaBuffer; i+=deltaBuffer){
+	    	
+	 		min1 = this.getMin(i, deltaBuffer, bufferList);
+	    	min2 = this.getMin(i + deltaBuffer, deltaBuffer, bufferList);
+	 		
+	    	if (min1 > min2){
 
-	 		if ((i+deltaBuffer) >= bufferList.length){
-	 			return incremental;
-	 		}
-	 		if (this.getMin(i, deltaBuffer, bufferList) <= this.getMin(i + deltaBuffer, deltaBuffer, bufferList)){
-	 			incremental = true;
-	 		}else {
 	 			incremental = false;
 	 		}
 	 	} 
+
 	 	return incremental;
     },
     
-    /*
-    getBufferMinTime = function (timeTarget, deltaBuffer, metrics, startRequestTime) {
-   	 	var bufferList = metrics.BufferLevel, 
-   	 		bufferMinArrayTemp = [],
-   	 		startTime, 
-   	 		finishTime, 
-   	 		startTimeTemp, 
-   	 		finishTimeTemp, 
-   	 		begin = 0, 
-   	 		end = bufferList.length, 
-   	 		bufferTime;
-	 
-   	 	startTimeTemp = (timeTarget/deltaBuffer) * deltaBuffer;
-   	 	finishTimeTemp = startTimeTemp + deltaBuffer;
-   	 	startTime = Math.floor(startTimeTemp);
-   	 	finishTime = Math.floor(finishTimeTemp);
-   	 
-   	 	this.debug.log("Baseline - timeTarget: " + timeTarget+" ms");
-    	this.debug.log("Baseline - startTime: "+ startTime);
-    	this.debug.log("Baseline - finishTime: "+ finishTime);
-   	 	
-	 	while(begin < end){
-	 		bufferTime = bufferList[begin].t.getTime() - startRequestTime;
-	    	//this.debug.log("Baseline - bufferTime: "+ bufferTime);
-	 		
-	 		if (bufferTime >= startTime && bufferTime <= finishTime){
-	 			bufferMinArrayTemp.push(bufferList[begin].level);
-	 		}
-	 		begin++;
-	 	} 
-    	this.debug.log("bufferMinArrayTemp: "+ bufferMinArrayTemp.length);
-
-	 	return this.min(bufferMinArrayTemp);
-    },
-    */
-    
-    getAverageThrough = function (time1, time, metricsBaseline, startSessionTime) {
-    	var throughList = metricsBaseline.ThroughSeg,
-    	begin = 0, 
-    	end = throughList.length,
+   getAverageThrough = function (time1, throughList, startSessionTime) {
+    	var begin, 
+    	end = throughList.length - 1,
     	intersection, 
  		throughInters, 
  		somaInters = 0, 
  		somaThroughInters = 0, 
  		countSegs = 0,
  		startTime, 
+ 		startTimeTemp, 
  		finishTime;
 
-    	//this.debug.log("Baseline - T1: " + time1+" ms");
-
-    	while(begin < end){
+    	for(begin = 0; begin <= end; begin++){
     		startTime = throughList[begin].responseTime.getTime() - startSessionTime; 
     		finishTime = throughList[begin].finishTime.getTime() - startSessionTime;
     		
-	    	//this.debug.log("Baseline - throughSeg: "+ throughList[begin].throughSeg);
-
-    		if(finishTime >= time1){
-    			if (startTime < time1) starTime = time1;
-
-    			intersection = finishTime - startTime;
-
+    		if(finishTime > time1){
+    			if (startTime < time1){
+    				startTimeTemp = time1;
+    			}else{
+    				startTimeTemp = startTime;
+    			}
+    			intersection = finishTime - startTimeTemp;
     			throughInters = throughList[begin].throughSeg * intersection;
-
+    			
     			somaInters += intersection;
-
     			somaThroughInters += throughInters;
     	    	
-    			//this.debug.log("Baseline - intersection: "+ intersection);
-    	    	//this.debug.log("Baseline - throughInters: "+ throughInters);
-    	    	//this.debug.log("Baseline - somaInters: "+ somaInters);
-    	    	//this.debug.log("Baseline - somaThroughInters: "+ somaThroughInters);
-
     			countSegs++;
     		}
-    		
-    		begin++;
     	}
     	
     	this.debug.log("Baseline - Segments number: "+ countSegs);
@@ -159,7 +94,6 @@ Dash.dependencies.DashMetricsBaselineExtensions = function () {
 
     return {
     	debug : undefined,
-    	min : min,
     	getMin : getMin,
     	getBufferMin : getBufferMin,
     	getAverageThrough : getAverageThrough,

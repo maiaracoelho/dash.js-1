@@ -3,7 +3,7 @@ MediaPlayer.models.MetricsBaselinesModel = function () {
     "use strict";
     var dateExecution,
     	mpd, 
-    	bDelay;
+    	bDelay = 0;
     
     return {
     	debug : undefined,
