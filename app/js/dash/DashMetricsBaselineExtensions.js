@@ -83,6 +83,19 @@ Dash.dependencies.DashMetricsBaselineExtensions = function () {
     	return (somaThroughInters/somaInters);
         
     },
+    
+    getAverageAllThroughs = function (throughList) {
+    	var begin, 
+    	end = throughList.length - 1,
+ 		sumThroughs = 0;
+
+    	for(begin = 0; begin <= end; begin++){
+    		sumThroughs += throughList[begin].throughSeg;
+    	}
+    	
+    	return (sumThroughs/throughList.length);
+        
+    },
         
     getThroughSegs = function (metricsBaseline) {
         if (metricsBaseline == null) {
@@ -97,6 +110,7 @@ Dash.dependencies.DashMetricsBaselineExtensions = function () {
     	getMin : getMin,
     	getBufferMin : getBufferMin,
     	getAverageThrough : getAverageThrough,
+    	getAverageAllThroughs : getAverageAllThroughs,
     	getThroughSegs : getThroughSegs
     };
 };
