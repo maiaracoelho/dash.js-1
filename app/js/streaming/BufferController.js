@@ -271,6 +271,17 @@ MediaPlayer.dependencies.BufferController = function () {
                                                             }
                                                             setState.call(self, READY);
                                                             self.system.notify("bufferingCompleted");
+                                                            self.debug.log("bufferingCompleted");
+                                                            /**Chamar o webservice em PHP para o armazenamento dos dados**/
+                                    			            var metrics = self.metricsModel.getMetricsFor(type);
+                                    			            var metricsBaseline = self.metricsBaselinesModel.getMetricsBaselineFor(type);                             			                        	 
+                                    			            
+                                    			            if(metrics != null && metricsBaseline != null){
+                                    			            	if (metrics.BufferLevel != null && metricsBaseline.ThroughSeg != null){
+                           			                        		 self.webServiceClient.load(metrics.BufferLevel, metricsBaseline.ThroughSeg, type); 
+                                    			            	}
+                   			                        	 	}
+                                    			            /**END**/
                                                         }
                                                     }
                                                 );
@@ -1127,6 +1138,7 @@ MediaPlayer.dependencies.BufferController = function () {
         };
         
     return {
+    	webServiceClient: undefined,
         videoModel: undefined,
         metricsModel: undefined,
         metricsBaselinesModel: undefined,

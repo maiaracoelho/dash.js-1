@@ -5,7 +5,7 @@ MediaPlayer.rules.MillerRule = function () {
     "use strict";
     
         var runningFastStart=true,
-        	deltaTime=10000, 
+        	deltaTime=25000, 
         	deltaBuffer=1,
 
         	        	      
@@ -22,7 +22,7 @@ MediaPlayer.rules.MillerRule = function () {
         				downloadTime = throughList[i].finishTime.getTime() - throughList[i].responseTime.getTime();
         				segDuration = throughList[i].duration * 1000; 
         				
-        				through = (throughList[i].sizeSeg * segDuration)/downloadTime; 
+        				through = (throughList[i].sizeSeg)/downloadTime; 
 
         	    		self.metricsBaselinesModel.updateThroughputSeg(throughList[i], bandwidth, through);
         			}
@@ -50,9 +50,9 @@ MediaPlayer.rules.MillerRule = function () {
                 lastRequest = self.metricsExt.getLastHttpRequest(metrics),
                 firstRequest = self.metricsExt.getFirstHttpRequest(metrics), 											//First Request n(0)
                 currentBufferLevel  = self.metricsExt.getCurrentBufferLevel(metrics),									//b(t)
-                bMin=5,
-                bLow=8,
-                bHigh=13,																								//self.metricsExt.getMaxIndexForBufferType(lastRequest.stream)
+                bMin=25,
+                bLow=50,
+                bHigh=125,																								//self.metricsExt.getMaxIndexForBufferType(lastRequest.stream)
                 bOpt=0.5*(bLow+bHigh),
                 downloadTime,															
                 currentThrough,																							//p_n(t)
@@ -135,7 +135,7 @@ MediaPlayer.rules.MillerRule = function () {
             	representation1 = self.manifestExt.getRepresentationFor1(current, data);
             	currentBandwidth = self.manifestExt.getBandwidth1(representation1);
             	currentBandwidthMs = currentBandwidth/1000;
-            	currentThrough = (sizeSeg * lastRequest.mediaduration)/downloadTime; 	
+            	currentThrough = (sizeSeg)/downloadTime; 	
             	
         		self.debug.log("Baseline - currentThrough: " + currentThrough + " bits/s");
 				self.debug.log("Baseline - time: " + time);
@@ -143,7 +143,7 @@ MediaPlayer.rules.MillerRule = function () {
         		
         		averageThrough = self.metricsBaselineExt.getAverageThrough(t1, metricsBaseline.ThroughSeg, startRequest);	
 	            	
-	        	if (isNaN(averageThrough) || averageThrough == 0 || averageThrough==undefined || averageThrough == null) {
+	        	if (isNaN(averageThrough)) {
 	                     self.debug.log("The averageThrough is NaN, bailing.");
 	             		 self.metricsBaselinesModel.setBdelay(bDelay);
 	                     deferred.resolve(new MediaPlayer.rules.SwitchRequest(current));
@@ -192,7 +192,7 @@ MediaPlayer.rules.MillerRule = function () {
 	                		   self.debug.log("runningFastStart false");
 	                    	   runningFastStart = false;
 	                    	                          	   
-	                           if(currentBufferLevel.level < bMin && current >= 0){
+	                           if(currentBufferLevel.level < bMin && current != 0){
 	                                self.debug.log("Down MIN");
 	                                self.metricsBaselinesModel.setBdelay(bDelay);
 	 	                           	deferred.resolve(new MediaPlayer.rules.SwitchRequest(0)); 
