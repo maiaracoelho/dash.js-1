@@ -30,18 +30,26 @@ Dash.dependencies.DashMetricsBaselineExtensions = function () {
     },
     
     getBufferMin = function (deltaBuffer, metrics) {
-   	 	var bufferList = metrics.BufferLevel, i, incremental = true, min1, min2;
+   	 	var bufferList = metrics.BufferLevel, i, incremental = true, min1, min2, countBuffers = 0;
    	 	   	 	
 	 	for(i = 0; i < bufferList.length - deltaBuffer; i+=deltaBuffer){
 	    	
 	 		min1 = this.getMin(i, deltaBuffer, bufferList);
+	 		
+	 		if ((i + deltaBuffer + deltaBuffer) > bufferList.length){
+	 			break;
+	 		}
+	 		
 	    	min2 = this.getMin(i + deltaBuffer, deltaBuffer, bufferList);
 	 		
 	    	if (min1 > min2){
-
+	        	this.debug.log("Baseline - min1 > min2");
+	    		countBuffers++;
 	 			incremental = false;
 	 		}
+	    	
 	 	} 
+    	this.debug.log("Baseline - Buffers number: "+ countBuffers);
 
 	 	return incremental;
     },

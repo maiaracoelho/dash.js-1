@@ -812,7 +812,7 @@ MediaPlayer.dependencies.BufferController = function () {
         },
 
         signalStreamComplete = function (request) {
-            this.debug.log(type + " Stream is complete.");
+            //this.debug.log(type + " Stream is complete.");
             clearPlayListTraceMetrics(new Date(), MediaPlayer.vo.metrics.PlayList.Trace.END_OF_CONTENT_STOP_REASON);
             doStop.call(this);
             deferredStreamComplete.resolve(request);
@@ -924,7 +924,7 @@ MediaPlayer.dependencies.BufferController = function () {
                         setState.call(self, READY);
                     }
                 } else {
-                    self.debug.log("Loading fragment: " + request.streamType + ":" + request.startTime);
+                    //self.debug.log("Loading fragment: " + request.streamType + ":" + request.startTime);
                     Q.when(deferredBuffersFlatten? deferredBuffersFlatten.promise : true).then(
                         function() {
                             self.fragmentController.prepareFragmentForLoading(self, request, onBytesLoadingStart, onBytesLoaded, onBytesError, signalStreamComplete).then(
@@ -1064,9 +1064,8 @@ MediaPlayer.dependencies.BufferController = function () {
                 var manifestMinBufferTime = self.manifestModel.getValue().minBufferTime;
                 self.bufferExt.decideBufferLength(manifestMinBufferTime, periodInfo.duration, waitingForBuffer).then(
                     function (time) {
-                        //self.debug.log("Min Buffer time: " + time);
-                    	var delay = self.metricsBaselinesModel.getBdelay();
-                        self.setMinBufferTime(delay);
+                        self.debug.log("Min Buffer time: " + time);
+                        self.setMinBufferTime(time);
                         self.requestScheduler.adjustExecuteInterval();
                     }
                 );
@@ -1078,8 +1077,8 @@ MediaPlayer.dependencies.BufferController = function () {
 
                         var quality = result.quality;
                         
-                        self.debug.log(type + " Playback quality: " + quality);
-                        self.debug.log("Populate " + type + " buffers.");
+                        //self.debug.log(type + " Playback quality: " + quality);
+                        //self.debug.log("Populate " + type + " buffers.");
 
                         if (quality !== undefined) {
                             newQuality = quality;
@@ -1211,8 +1210,7 @@ MediaPlayer.dependencies.BufferController = function () {
             self.bufferExt.decideBufferLength(manifest.minBufferTime, periodInfo, waitingForBuffer).then(
                         function (time) {
                             //self.debug.log("Min Buffer time: " + time);
-                        	var delay = self.metricsBaselinesModel.getBdelay();
-                            self.setMinBufferTime(delay);
+                            self.setMinBufferTime(time);
                         }
                     );
             /****/
